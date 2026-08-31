@@ -6,21 +6,34 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "tsx scripts/seed-database.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "@tanstack/react-query": "^5.102.8",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
+    "lucide-react": "^1.38.0",
     "next": "16.3.3",
+    "openai": "^7.8.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "stripe": "^22.6.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "supabase": "^2.116.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }
