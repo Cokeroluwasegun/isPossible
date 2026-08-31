@@ -23,7 +23,10 @@ async function seedPricingItems() {
     updated_at: new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from('pricing_items').upsert(items, { onConflict: 'category,name' });
+  // First delete existing items to avoid conflicts
+  await supabase.from('pricing_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  const { error } = await supabase.from('pricing_items').insert(items);
   
   if (error) {
     console.error('Error seeding pricing items:', error);
@@ -84,7 +87,10 @@ async function seedSampleLeads() {
     },
   ];
 
-  const { error } = await supabase.from('ghl_leads').upsert(leads, { onConflict: 'id' });
+  // Delete existing leads first
+  await supabase.from('ghl_leads').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  const { error } = await supabase.from('ghl_leads').insert(leads);
   
   if (error) {
     console.error('Error seeding leads:', error);
@@ -148,7 +154,10 @@ Budget: $35-40K. Timeline: "ASAP, before summer heat". No HOA delays. Permit onl
     },
   ];
 
-  const { error } = await supabase.from('site_walks').upsert(siteWalks, { onConflict: 'ghl_lead_id' });
+  // Delete existing site walks first
+  await supabase.from('site_walks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  const { error } = await supabase.from('site_walks').insert(siteWalks);
   
   if (error) {
     console.error('Error seeding site walks:', error);
