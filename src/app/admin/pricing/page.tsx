@@ -21,16 +21,26 @@ export default function PricingPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<PricingItem>>({});
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   async function fetchItems() {
     try {
       const res = await fetch('/api/pricing');
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('API error:', error);
+        setFetchError(error.error || 'Failed to fetch pricing items');
+        return;
+      }
       const data = await res.json();
+      console.log('Fetched pricing items:', data);
       if (Array.isArray(data)) {
         setItems(data);
+        setFetchError(null);
       }
     } catch (error) {
       console.error('Failed to fetch pricing items:', error);
+      setFetchError('Failed to connect to server');
     } finally {
       setLoading(false);
     }
@@ -126,6 +136,22 @@ export default function PricingPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-700">Failed to load pricing items: {fetchError}</p>
+          <button
+            onClick={() => fetchItems()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
