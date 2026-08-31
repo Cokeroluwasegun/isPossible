@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Search, Plus, Edit, Trash2, DollarSign, Package } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function PricingPage() {
   const supabase = createServerSupabaseClient();
@@ -40,10 +41,13 @@ export default async function PricingPage() {
           </h1>
           <p className="text-gray-500 mt-1">Manage line items, categories, and markup percentages</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2">
+        <Link
+          href="/admin/pricing/new"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
+        >
           <Plus size={18} />
           Add Item
-        </button>
+        </Link>
       </div>
 
       {Object.entries(grouped).map(([category, categoryItems]) => (
