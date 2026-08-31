@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -53,23 +52,34 @@ export default function NewPricingItemPage() {
     setError(null);
     setIsLoading(true);
 
-    const { error } = await supabase.from('pricing_items').insert({
-      category: formData.category,
-      name: formData.name,
-      unit: formData.unit,
-      base_price: parseFloat(formData.base_price),
-      markup_pct: parseFloat(formData.markup_pct) || 0,
-      description: formData.description || null,
-    });
+    try {
+      const res = await fetch('/api/pricing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: formData.category,
+          name: formData.name,
+          unit: formData.unit,
+          base_price: parseFloat(formData.base_price),
+          markup_pct: parseFloat(formData.markup_pct) || 0,
+          description: formData.description || null,
+        }),
+      });
 
-    if (error) {
-      setError(error.message);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Failed to create pricing item');
+        setIsLoading(false);
+        return;
+      }
+
+      router.push('/admin/pricing');
+      router.refresh();
+    } catch (err) {
+      setError('Failed to create pricing item');
       setIsLoading(false);
-      return;
     }
-
-    router.push('/admin/pricing');
-    router.refresh();
   };
 
   return (
