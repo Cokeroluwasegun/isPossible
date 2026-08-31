@@ -3,7 +3,8 @@ import { ProposalGenerationInput, ProposalGenerationOutput, PricingItem } from '
 import { PRICING_ITEMS, calculateLineTotal, TAX_RATE } from '@/lib/pricing-data';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
 });
 
 const SYSTEM_PROMPT = `You are an expert hardscape/landscape estimator for Greenscape Pro, a premium Phoenix-based design-build company. Your job is to convert site walk transcripts into detailed, accurate proposal line items using the provided pricing catalog.
@@ -81,7 +82,7 @@ export async function generateProposal(input: ProposalGenerationInput): Promise<
   const prompt = buildUserPrompt(input);
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'llama-3.1-70b-versatile',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: prompt },
