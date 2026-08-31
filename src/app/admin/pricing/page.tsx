@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Search, Plus, Edit, Trash2, DollarSign, Package } from 'lucide-react';
 import Link from 'next/link';
@@ -22,6 +22,10 @@ export default function PricingPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<PricingItem>>({});
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   async function fetchItems() {
     try {
