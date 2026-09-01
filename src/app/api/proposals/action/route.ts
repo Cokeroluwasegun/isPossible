@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const { data: proposal, error: fetchError } = await supabase
       .from('proposals')
-      .select('*, ghl_leads(*)')
+      .select('*')
       .eq('id', proposal_id)
       .single();
 
@@ -23,7 +23,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Proposal not found' }, { status: 404 });
     }
 
-    const lead = proposal.ghl_leads;
+    // Fetch lead separately
+    const { data: lead, error: leadError } = await supabase
+      .from('ghl_leads')
+      .select('id, name, email, phone, address, project_type, budget_range, source, notes')
+      .eq('id', proposal.ghl_lead_id)
+      .single();
+
+    if (leadError || !lead) {
+      return NextResponse.json({ error: 'Lead not found for proposal' }, { status: 404 });
+    }
 
     switch (action) {
       case 'approve': {
