@@ -1,34 +1,61 @@
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Verify webhook signature
+function verifyWebhookSignature(body: string, signature: string): boolean {
+  const secret = process.env.GHL_WEBHOOK_SECRET;
+  if (!secret) {
+    // If no secret configured, accept webhooks for backwards compatibility
+    return true;
+  }
+  try {
+    const crypto = require('crypto');
+    const expected = crypto
+      .createHmac('sha256', secret)
+      .update(body)
+      .digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const signature = request.headers.get('x-webhook-signature');
+    const body = await request.text();
+    
+    // Verify webhook signature
+    if (!verifyWebhookSignature(body, signature || '')) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    const parsed = JSON.parse(body);
     const supabase = createServerSupabaseClient();
 
     // Log webhook event
     await supabase.from('webhook_events').insert({
       source: 'ghl',
-      event_type: body.type || 'unknown',
-      payload: body,
+      event_type: parsed.type || 'unknown',
+      payload: parsed,
     });
 
     // Handle different GHL webhook events
-    switch (body.type) {
+    switch (parsed.type) {
       case 'lead.created':
-        await handleLeadCreated(supabase, body.data);
+        await handleLeadCreated(supabase, parsed.data);
         break;
       case 'lead.updated':
-        await handleLeadUpdated(supabase, body.data);
+        await handleLeadUpdated(supabase, parsed.data);
         break;
       case 'site_walk.completed':
-        await handleSiteWalkCompleted(supabase, body.data);
+        await handleSiteWalkCompleted(supabase, parsed.data);
         break;
       case 'proposal.signed':
-        await handleProposalSigned(supabase, body.data);
+        await handleProposalSigned(supabase, parsed.data);
         break;
       default:
-        console.log('[Webhook] Unhandled event type:', body.type);
+        console.log('[Webhook] Unhandled event type:', parsed.type);
     }
 
     return NextResponse.json({ success: true });

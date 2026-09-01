@@ -16,19 +16,47 @@ import {
 import { useState } from 'react';
 
 export default function SettingsPage() {
+  interface SavedConfig {
+    NEXT_PUBLIC_SUPABASE_URL?: string;
+    NEXT_PUBLIC_SUPABASE_ANON_KEY?: string;
+    SUPABASE_SERVICE_ROLE_KEY?: string;
+    GROQ_API_KEY?: string;
+    STRIPE_SECRET_KEY?: string;
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?: string;
+    NEXT_PUBLIC_APP_URL?: string;
+  }
+
+  function loadSavedConfig(): SavedConfig {
+    try {
+      const raw = localStorage.getItem('greenscape-settings');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as SavedConfig;
+      return Object.fromEntries(
+        Object.entries(parsed).filter(([_, v]) => v !== undefined && v !== '')
+      ) as SavedConfig;
+    } catch {
+      return {};
+    }
+  }
+
+  function saveConfigToLocalStorage(config: SavedConfig) {
+    try {
+      localStorage.setItem('greenscape-settings', JSON.stringify(config));
+    } catch {
+      // Ignore localStorage failures
+    }
+  }
+
+  const [envVars, setEnvVars] = useState<SavedConfig>(loadSavedConfig());
   const [saved, setSaved] = useState<string | null>(null);
-  const [envVars, setEnvVars] = useState({
-    NEXT_PUBLIC_SUPABASE_URL: '',
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
-    SUPABASE_SERVICE_ROLE_KEY: '',
-    GROQ_API_KEY: '',
-    STRIPE_SECRET_KEY: '',
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: '',
-    NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
-  });
 
   const handleSave = (section: string) => {
     setSaved(section);
+    // Save to localStorage when user saves
+    const config = Object.fromEntries(
+      Object.entries(envVars).map(([k, v]) => [k, v || ''])
+    ) as SavedConfig;
+    saveConfigToLocalStorage(config);
     setTimeout(() => setSaved(null), 3000);
   };
 
@@ -89,37 +117,37 @@ export default function SettingsPage() {
       )}
 
       {sections.map(section => (
-        <div key={section.id} className="bg-white rounded-lg border overflow-hidden">
-          <div className="px-6 py-4 border-b bg-gray-50 flex items-center gap-3">
-            <section.icon className="h-6 w-6 text-gray-400" />
-            <div>
-              <h2 className="font-semibold text-gray-900">{section.title}</h2>
-              <p className="text-sm text-gray-500">{section.description}</p>
+          <div key={section.id} className="bg-white rounded-lg border overflow-hidden">
+            <div className="px-6 py-4 border-b bg-gray-50 flex items-center gap-3">
+              <section.icon className="h-6 w-6 text-gray-400" />
+              <div>
+                <h2 className="font-semibold text-gray-900">{section.title}</h2>
+                <p className="text-sm text-gray-500">{section.description}</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              {section.fields.map(field => (
+                <div key={field.key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                  <input
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    value={envVars[field.key as keyof SavedConfig] || ''}
+                    onChange={(e) => setEnvVars(prev => ({ ...prev, [field.key]: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  />
+                </div>
+              ))}
+              <button
+                onClick={() => handleSave(section.title)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <Save size={18} />
+                Save {section.title} Settings
+              </button>
             </div>
           </div>
-          <div className="p-6 space-y-4">
-            {section.fields.map(field => (
-              <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
-                <input
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  value={envVars[field.key as keyof typeof envVars] || ''}
-                  onChange={(e) => setEnvVars(prev => ({ ...prev, [field.key]: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                />
-              </div>
-            ))}
-            <button
-              onClick={() => handleSave(section.title)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              <Save size={18} />
-              Save {section.title} Settings
-            </button>
-          </div>
-        </div>
-      ))}
+        ))}
 
       {/* Danger Zone */}
       <div className="bg-white rounded-lg border overflow-hidden border-red-200">
@@ -164,7 +192,7 @@ export default function SettingsPage() {
             <h3 className="font-medium text-gray-900 mb-2">Required for Deployment</h3>
             <ul className="space-y-1 text-gray-600">
               <li>• Supabase Project URL & Keys</li>
-              <li>• OpenAI API Key</li>
+              <li>• Groq API Key</li>
               <li>• Stripe Test/Live Keys</li>
               <li>• NEXT_PUBLIC_APP_URL (production URL)</li>
             </ul>

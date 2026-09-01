@@ -420,7 +420,6 @@ function enrichProposal(parsed: ProposalGenerationOutput, input: ProposalGenerat
   // Recalculate with added items
   const finalSubtotal = validatedItems.reduce((sum, item) => sum + item.total_price, 0);
   const finalTax = Math.round(finalSubtotal * TAX_RATE * 100) / 100;
-  const finalTotal = finalSubtotal + finalTax;
 
   return {
     ...parsed,

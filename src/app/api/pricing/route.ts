@@ -1,5 +1,15 @@
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const PricingItemSchema = z.object({
+  category: z.string().min(1, 'Category is required'),
+  name: z.string().min(1, 'Name is required'),
+  unit: z.string().min(1, 'Unit is required'),
+  base_price: z.number().min(0, 'Base price must be non-negative'),
+  markup_pct: z.number().min(0, 'Markup percentage must be non-negative').default(0),
+  description: z.string().optional(),
+});
 
 export async function GET() {
   try {
@@ -23,23 +33,26 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { category, name, unit, base_price, markup_pct, description } = body;
-
-    if (!category || !name || !unit || base_price === undefined) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    
+    const parsed = PricingItemSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.issues },
+        { status: 400 }
+      );
     }
-
+    
     const supabase = createServerSupabaseClient();
 
     const { data, error } = await supabase
       .from('pricing_items')
       .insert({
-        category,
-        name,
-        unit,
-        base_price: parseFloat(base_price),
-        markup_pct: parseFloat(markup_pct) || 0,
-        description: description || null,
+        category: parsed.data.category,
+        name: parsed.data.name,
+        unit: parsed.data.unit,
+        base_price: parsed.data.base_price,
+        markup_pct: parsed.data.markup_pct || 0,
+        description: parsed.data.description || null,
       })
       .select()
       .single();
@@ -53,25 +66,44 @@ export async function POST(request: NextRequest) {
   }
 }
 
+const UpdatePricingSchema = z.object({
+  id: z.string().min(1, 'ID is required'),
+  category: z.string().optional(),
+  name: z.string().optional(),
+  unit: z.string().optional(),
+  base_price: z.number().min(0).optional(),
+  markup_pct: z.number().min(0).optional(),
+  description: z.string().optional(),
+});
+
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, ...updates } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    
+    const parsed = UpdatePricingSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.issues },
+        { status: 400 }
+      );
     }
-
+    
+    const { id, ...updates } = parsed.data;
     const supabase = createServerSupabaseClient();
+
+    const updateData: Record<string, unknown> = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+    
+    // Only include fields that are defined (not undefined)
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) delete updateData[key];
+    });
 
     const { data, error } = await supabase
       .from('pricing_items')
-      .update({
-        ...updates,
-        base_price: updates.base_price !== undefined ? parseFloat(updates.base_price) : undefined,
-        markup_pct: updates.markup_pct !== undefined ? parseFloat(updates.markup_pct) : undefined,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

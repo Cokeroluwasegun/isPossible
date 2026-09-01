@@ -1,14 +1,26 @@
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { generateProposalFromDatabase } from '@/lib/proposal-generator';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const GenerateProposalSchema = z.object({
+  ghl_lead_id: z.string().min(1, 'Lead ID is required'),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { ghl_lead_id } = await request.json();
+    const body = await request.json();
     
-    if (!ghl_lead_id) {
-      return NextResponse.json({ error: 'ghl_lead_id is required' }, { status: 400 });
+    // Validate input
+    const parsed = GenerateProposalSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.issues },
+        { status: 400 }
+      );
     }
+    
+    const { ghl_lead_id } = parsed.data;
 
     const supabase = createServerSupabaseClient();
     const { proposal, lead, siteWalk } = await generateProposalFromDatabase(supabase, ghl_lead_id);

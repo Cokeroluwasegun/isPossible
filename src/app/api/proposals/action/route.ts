@@ -2,14 +2,28 @@ import { createServerSupabaseClient } from '@/lib/supabase';
 import { createMockDepositSession } from '@/lib/stripe';
 import { createMockDocuSignEnvelope } from '@/lib/docusign';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const ActionSchema = z.object({
+  proposal_id: z.string().min(1, 'Proposal ID is required'),
+  action: z.enum(['approve', 'send', 'request_changes']),
+  marcus_notes: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { proposal_id, action, marcus_notes } = await request.json();
+    const body = await request.json();
     
-    if (!proposal_id || !action) {
-      return NextResponse.json({ error: 'proposal_id and action required' }, { status: 400 });
+    // Validate input
+    const parsed = ActionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.issues },
+        { status: 400 }
+      );
     }
+    
+    const { proposal_id, action, marcus_notes } = parsed.data;
 
     const supabase = createServerSupabaseClient();
 

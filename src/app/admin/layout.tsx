@@ -10,6 +10,7 @@ import {
   BarChart2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Greenscape Pro - Proposal Agent Admin',
@@ -70,7 +71,9 @@ export default function AdminLayout({
         </header>
 
         <main className="p-6 lg:p-8">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>
