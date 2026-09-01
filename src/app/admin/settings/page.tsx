@@ -21,7 +21,7 @@ export default function SettingsPage() {
     NEXT_PUBLIC_SUPABASE_URL: '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
     SUPABASE_SERVICE_ROLE_KEY: '',
-    OPENAI_API_KEY: '',
+    GROQ_API_KEY: '',
     STRIPE_SECRET_KEY: '',
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: '',
     NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
@@ -46,11 +46,11 @@ export default function SettingsPage() {
     },
     {
       id: 'ai',
-      title: 'AI Integration (OpenAI)',
+      title: 'AI Integration (Groq)',
       icon: Key,
-      description: 'Configure OpenAI API for proposal generation',
+      description: 'Configure Groq API for proposal generation',
       fields: [
-        { key: 'OPENAI_API_KEY', label: 'API Key', type: 'password', placeholder: 'sk-...' },
+        { key: 'GROQ_API_KEY', label: 'API Key', type: 'password', placeholder: 'gsk_...' },
       ],
     },
     {
