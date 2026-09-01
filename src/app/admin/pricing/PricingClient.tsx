@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
-import { Search, Plus, Edit, Trash2, DollarSign, Package } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, DollarSign, Package, X } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from '@/components/Toast';
 
 interface PricingItem {
   id: string;
@@ -35,11 +36,12 @@ export function PricingClient({ initialItems }: PricingClientProps) {
       const data = await res.json();
       if (res.ok && data.success) {
         setItems(prev => prev.filter(item => item.id !== id));
+        toast.success('Pricing item deleted');
       } else {
-        alert(data.error || 'Failed to delete');
+        toast.error(data.error || 'Failed to delete');
       }
     } catch (error) {
-      alert('Failed to delete');
+      toast.error('Failed to delete');
     } finally {
       setActionLoading(null);
     }
@@ -73,11 +75,12 @@ export function PricingClient({ initialItems }: PricingClientProps) {
         ));
         setEditingId(null);
         setEditForm({});
+        toast.success('Pricing item updated');
       } else {
-        alert(data.error || 'Failed to update');
+        toast.error(data.error || 'Failed to update');
       }
     } catch (error) {
-      alert('Failed to update');
+      toast.error('Failed to update');
     } finally {
       setActionLoading(null);
     }

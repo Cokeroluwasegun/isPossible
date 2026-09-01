@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ToastContainer } from '@/components/Toast';
 
 export const metadata: Metadata = {
   title: 'Greenscape Pro - Proposal Agent Admin',
@@ -76,6 +77,7 @@ export default function AdminLayout({
           </ErrorBoundary>
         </main>
       </div>
+      <ToastContainer />
     </div>
   );
 }

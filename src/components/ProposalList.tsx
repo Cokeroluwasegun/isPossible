@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { 
   FileText, 
   Search, 
-  Filter, 
   ChevronRight,
   DollarSign,
   Clock,
@@ -20,6 +19,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
+import { toast } from '@/components/Toast';
 
 interface ProposalListProps {
   initialProposals: any[];
@@ -31,7 +31,6 @@ export function ProposalList({ initialProposals }: ProposalListProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
 
   const filteredProposals = proposals.filter(p => {
     const matchesSearch = !search || 
@@ -67,11 +66,17 @@ export function ProposalList({ initialProposals }: ProposalListProps) {
         setProposals(prev => prev.map(p => 
           p.id === proposalId ? { ...p, ...data.proposal } : p
         ));
+        const actionLabels: Record<string, string> = {
+          approve: 'Proposal approved',
+          send: 'Proposal sent to client',
+          request_changes: 'Changes requested',
+        };
+        toast.success(actionLabels[action] || 'Action completed');
       } else {
-        alert(data.error || 'Action failed');
+        toast.error(data.error || 'Action failed');
       }
     } catch (error) {
-      alert('Failed to perform action');
+      toast.error('Failed to perform action');
     } finally {
       setLoading(false);
     }

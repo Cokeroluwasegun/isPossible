@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn, formatCurrency, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
+import { toast } from '@/components/Toast';
 
 interface LeadDetailProps {
   lead: {
@@ -76,12 +77,13 @@ export function LeadDetail({ lead, siteWalk, proposals }: LeadDetailProps) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        toast.success('Proposal generated successfully');
         router.refresh();
       } else {
-        alert(data.error || 'Failed to generate proposal');
+        toast.error(data.error || 'Failed to generate proposal');
       }
     } catch (error) {
-      alert('Failed to generate proposal');
+      toast.error('Failed to generate proposal');
     } finally {
       setGeneratingProposal(false);
     }
